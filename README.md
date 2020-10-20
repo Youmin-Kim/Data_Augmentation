@@ -23,7 +23,7 @@ This repository intergrated various Data Augmentation methods. Our implementatio
 - NumPy
 
 ### Training Command
-- Hyperparamters for each augmentation methods is fixed to same values on each original paper
+- Hyperparamters for each augmentation method are fixed to same values on each original paper
 - ex) dataset : cifar100, augmentation : cutout, model: resnet110, index of the number of trainings: 1
 ```
 python3 ./train.py \
