@@ -258,6 +258,12 @@ def train(train_loader, model, criterion, optimizer, epoch):
             loss = sum([W_[k] * criterion(output, c_[k]) for k in range(4)])
 
             acc = sum([W_[k] * accuracy(output, c_[k])[0] for k in range(4)])
+        elif args.augtype == 'LA' and r < 0.5:
+            input = LocalAugment(input, 1.0, 0.25, 4)
+
+            # compute output
+            output = model(input)
+            loss = criterion(output, target)
         else:
             output = model(input)
             loss = criterion(output, target)
@@ -376,6 +382,92 @@ class Cutout(object):
         img = img * mask
 
         return img
+      
+      
+def LocalAugment(img, p, c_p, tiles):
+    grid = int(math.sqrt(tiles))
+    l = img.size()[2] // grid
+    border = int(img.size()[2] * 0.1)
+    if args.type in ['cifar100', 'CINIC10']:
+        border = 3
+    elif args.type == 'stl10':
+        border = 8
+    elif args.type == 'imagenet':
+        border = 22
+
+    temp_img = img.clone()
+
+    for k in range(img.size()[0]):
+        prob = np.random.rand()
+        if prob <= p:
+
+            m = int(torch.randint(tiles, (1,)))
+            num_list = torch.randint(border+1, (tiles, 2))
+            tile_list = torch.randperm(tiles)
+            total_list = torch.cat((num_list, tile_list.unsqueeze(dim=1)), dim=1)
+            if m == 0:
+                n_il = total_list
+                s_m_list = torch.from_numpy(np.array([]))
+            elif m == 4:
+                m_il = total_list
+                s_m_list = m_il.clone()
+                m_il = m_il[torch.randperm(m_il.size()[0])]
+                n_il = torch.from_numpy(np.array([]))
+            else:
+                n = tiles - m
+                n_il = total_list[tiles-n:tiles]
+                m_il = total_list[:m]
+                s_m_list = m_il.clone()
+                m_il = m_il[torch.randperm(m_il.size()[0])]
+
+            # mixing part with augmentation
+            for i in range(s_m_list.size()[0]):
+                x_t_pos = (int(s_m_list[i][2]) % grid) * l + int(s_m_list[i][0])
+                y_t_pos = (int(s_m_list[i][2]) // grid) * l + int(s_m_list[i][1])
+                x_s_pos = (int(m_il[i][2]) % grid) * l + int(m_il[i][0])
+                y_s_pos = (int(m_il[i][2]) // grid) * l + int(m_il[i][1])
+                img[k, :, y_t_pos:(y_t_pos+l-border), x_t_pos:(x_t_pos+l-border)] = temp_img[k, :, y_s_pos:(y_s_pos+l-border), x_s_pos:(x_s_pos+l-border)]
+
+                c_prob = np.random.rand(1)
+                if c_prob < c_p:
+                    c_random = torch.randperm(3)
+                    temp = img[k, :, y_t_pos:(y_t_pos+l-border), x_t_pos:(x_t_pos+l-border)].clone()
+                    for color in range(0, 3):
+                        img[k, color, y_t_pos:(y_t_pos+l-border), x_t_pos:(x_t_pos+l-border)] = temp[c_random[color], :, :]
+
+            # non-mixing part with augmentation
+            for i in range(n_il.size()[0]):
+                x_t_pos = (int(n_il[i][2]) % grid) * l
+                y_t_pos = (int(n_il[i][2]) // grid) * l
+
+                # augmentation
+                a_type = np.random.rand()
+                # Flip Left/Right
+                if (a_type >= 0) and (a_type < 0.1):
+                    img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)] = torch.flip(img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)], dims=[2])
+                # Flip Up/Down
+                elif (a_type >= 0.1) and (a_type < 0.2):
+                    img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)] = torch.flip(img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)], dims=[1])
+                # Rotate 90 degree
+                elif (a_type >= 0.2) and (a_type < 0.3):
+                    img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)] = torch.rot90(img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)], k=1, dims=[1, 2])
+                # Rotate 180 degree
+                elif (a_type >= 0.3) and (a_type < 0.4):
+                    img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)] = torch.rot90(img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)], k=2, dims=[1, 2])
+                # Rotate 270 degree
+                elif (a_type >= 0.4) and (a_type < 0.5):
+                    img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)] = torch.rot90(img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)], k=3, dims=[1, 2])
+                else:
+                    continue
+
+                c_prob = np.random.rand(1)
+                if c_prob < c_p:
+                    c_random = torch.randperm(3)
+                    temp = img[k, :, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)].clone()
+                    for color in range(0, 3):
+                        img[k, color, y_t_pos:(y_t_pos+l), x_t_pos:(x_t_pos+l)] = temp[c_random[color], :, :]
+
+    return img
 
 
 def rand_bbox(size, lam):
