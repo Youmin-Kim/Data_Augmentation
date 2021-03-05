@@ -8,6 +8,7 @@ This repository intergrated various Data Augmentation methods. Our implementatio
 - [Mixup](https://github.com/facebookresearch/mixup-cifar10)
 - [CutMix](https://github.com/clovaai/CutMix-PyTorch)
 - [RICAP](https://github.com/jackryo/ricap)
+- [LA (LocalAugment)](https://ieeexplore.ieee.org/document/9319662)
 
 ## Dataset
 - CIFAR10, CIFAR100
