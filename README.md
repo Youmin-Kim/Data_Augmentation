@@ -2,7 +2,7 @@
 
 This repository intergrated various Data Augmentation methods. Our implementation is based on these repositories:
 
-- [PyTorch ImageNet Example](https://github.com/pytorch/examples/tree/master/imagenet)
+- [PyTorch Cifar Models](https://github.com/junyuseu/pytorch-cifar-models)
 - [Cutout](https://github.com/uoguelph-mlrg/Cutout)
 - [RandomErasing](https://pytorch.org/docs/stable/torchvision/transforms.html#torchvision.transforms.RandomErasing)
 - [Mixup](https://github.com/facebookresearch/mixup-cifar10)
