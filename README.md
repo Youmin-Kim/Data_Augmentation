@@ -14,7 +14,7 @@ This repository intergrated various Data Augmentation methods. Our implementatio
 - CIFAR10, CIFAR100
 
 ## Model
-- ResNet, WideResNet
+- ResNet
 
 ## Training Start
 ### Requirements
@@ -34,25 +34,4 @@ python3 ./train.py \
 --tn 1 \
 --augtype cutout \
 --length 8
-```
-- ex) dataset : cifar10, augmentation : cutout, model: wideresnet16_2, index of the number of trainings: 1
-```
-python3 ./train.py \
---type cifar10 \
---model wideresnet \
---depth 16 \
---wfactor 2 \
---tn 1 \
---augtype cutout \
---length 16
-```
-- ex) dataset : cifar100, augmentation : cutmix, model: wideresnet22_4, index of the number of trainings: 2
-```
-python3 ./train.py \
---type cifar100 \
---model wideresnet \
---depth 22 \
---wfactor 4 \
---tn 2 \
---augtype cutmix
 ```
